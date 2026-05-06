@@ -6,22 +6,23 @@ Promoter Capture Hi-C (PCHi-C) is a method of enriching Hi-C libraries for conta
 
 ABCC leverages the statistical modelling of PCHi-C data by CHiCAGO software [1][2] for normalisation and imputation, and uses the results as a source of contact information, as described in more detail below.
 
-The ABC code used for this implementation was downloaded from the repo https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) on 22 September 2022 (latest commit: a74aa73e66329968bc2d4068464ee9e8cacf86a1). 
+The ABC code used for this implementation was downloaded from the repo https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction) on 22 September 2022 (latest commit: a74aa73). 
 
 ## Requirements
 For each cell-type, the inputs to the ABC model are:
 
 Inputs:
 
- 	* bam file for Dnase-Seq or ATAC-Seq (indexed and sorted)
+ 	* bam file for Dnase-Seq (indexed and sorted) or tagAlign file for ATAC-seq
  	* bam file for H3K27ac ChIP-Seq (indexed and sorted) (optional)
- 	* PCHi-C data (see the PCHi-C imputation section below)
- 	* A measure of gene expression (gene-level TPM)
+ 	* CHiCAGO-processed PCHi-C data (see the PCHi-C imputation section below)
+ 	* A measure of gene expression (gene-level TPM) [if the original version of the ABC algorithm is used for enhancer/gene definition] 
 
 In addition the following (non-cell-type specific) genome annotation files are required:
 
  * bed file containing gene annotations (may change across cell types if using cell-type specific TSS's)
  * bed file containing chromosome annotations
+ * A CHiCAGO design folder for the experimental design of the input PCHi-C experiment  
 
 ## The principle of the ABC(C) Model
 
@@ -102,7 +103,7 @@ Rscript enhancerliftoverwrapper.R EnhancerList.txt GeneList.txt
 
 ## Tips
 * We found that an optimal ABCC score cutoff is highly data-dependent. One way to estimate a cutoff is plot a correlation between ABCC numerators (i.e., unnormalised ABCC scores) per gene and gene expression levels across a range of ABCC score cutoffs and choose the lowest cutoff, at which an appreciable correlation is achieved.
-* Please note the gene expression file should be tab separated with no column names.
+* The Expression column is not used by the algorithm itself, and is only helpful for post-hoc analyses. The latest version of the ABC algorithm provides accessibility-based estimates of expression in this column.
 
 ## Contributors
 * ABCC development was led by Pavel Artemov supervised by Mikhail Spivakov, with valuable contributions by Joseph Wayman, Valeriya Malysheva and Helen Ray-Jones.
@@ -116,27 +117,16 @@ Rscript enhancerliftoverwrapper.R EnhancerList.txt GeneList.txt
 Please submit a github issue with any questions or if you experience any issues/bugs. 
 
 ### Dependencies
-The codebase relies on the following dependencies (tested version provided in 
-parentheses):
+The codebase relies on the following dependencies:
 
-```
-Python (3.6.4)
-CHiCAGO
-samtools (0.1.19)
-bedtools (2.26.0)
-Tabix (0.2.5) - Partial dependancy
-MACS2 (2.1.1.20160309) - Partial dependancy
-Java (1.8) - Partial dependancy
-Juicer Tools (1.7.5) - Partial dependancy
+* Imputation step: R with CHiCAGO, data.table, dplyr, stringr, ggplot2 and ggpubr
 
-Python packages:
-pyranges (0.0.55)
-numpy (1.15.2)
-pandas (0.23.4)
-scipy (0.18.1)
-pysam (0.15.1)
-pyBigWig (0.3.2) - Partial dependancy
-```
+* Modified prediction.py: Python with pyranges, numpy, pandas, scipy and pysam
+
+* If using the current ABC implementation for the first steps of ABC, the following dependencies are also required (tested versions listed in brackets): samtools (0.1.19), bedtools (2.26.0), Tabix (0.2.5), MACS2 (2.1.1.20160309), Java (1.8), Juicer Tools (1.7.5),
+pyBigWig (0.3.2)
+
+* The conda environment required for the current snakemake ABC pipeline is described in the ABC docs (https://abc-enhancer-gene-prediction.readthedocs.io/).
 
 ### References 
 [1] Fulco CP, Nasser J, Jones TR, Munson G, Bergman DT, Subramanian V, Grossman SR, Anyoha R, Doughty BR, Patwardhan TA, Nguyen TH, Kane M, Perez EM, Durand NC, Lareau CA, Stamenova EK, Aiden EL, Lander ES & Engreitz JM. Activity-by-contact model of enhancer–promoter regulation from thousands of CRISPR perturbations. Nat. Genet. 51, 1664–1669 (2019). https://www.nature.com/articles/s41588-019-0538-0

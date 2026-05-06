@@ -8,7 +8,7 @@ message("\nUsage: Rscript imputation_script_whole_genome.r ${pchic.rds} ${design
 # design_dir: the CHiCAGO design dir (needs to end with '/') 
 # enhancer_dir: the directory with enhancer features from the first steps of ABC (needs to end with '/') 
 # split_pchic: the full path + filename prefix for the split PCHiC files produced as an intermediate step
-# distout.rds: an RDS file with CHiCAGO distance function parameters
+# distout.rds: the full path to the output RDS file with CHiCAGO distance function parameters
 # imputed_pchic_prefix: output directory, needs to end with '/' \n\n")  
 
 # Below are some examples of arguments for input 
@@ -47,6 +47,21 @@ split_pchic = args[4]
 distout.rds = args[5]
 pchic_out_prefix = file.path(args[6])
 
+if (dir.exists(pchic_out_prefix)) {
+  stop(sprintf("The output directory %s already exists.", pchic_out_prefix))
+} else {
+  if(!dir.create(pchic_out_prefix)){
+  	stop(sprintf("Couldn't create the output directory %s.", pchic_out_prefix))
+  }
+}
+
+plots_out_dir = file.path(pchic_out_prefix, "plots")
+
+if(!dir.create(plots_out_dir)){
+	stop("Couldn't create a plots subdirectory %s.", plots_out_dir)
+}
+
+
 ##### Getting the path to the scripts' dir
 
 allArgs = commandArgs(trailingOnly = FALSE)
@@ -62,7 +77,7 @@ if(!system2("Rscript", args = c(file.path(script_dir, "chr_split.r"), input_cand
 }
 
 ##### Splitting PCHiC by chromosome
-if(!system2("Rscript", args = c(file.path(script_dir, "chic_split.r"), pchic.rds, testDesignDir, distout.rds, split_pchic)){
+if(!system2("Rscript", args = c(file.path(script_dir, "chic_split.r"), pchic.rds, testDesignDir, distout.rds, split_pchic))){
   message("Succesfully finished PCHiC split")
 }else{
   message("Error in the PCHiC split")
@@ -124,14 +139,20 @@ candidate_genes[,chr:=as.character(chr)]
 
 
 # Merging enhancers and genes 
-if("DHS.RPKM.quantile" %in% names(candidate_enhancers)) {
-  ce_test <- candidate_enhancers[, .(chr, start, end, DHS.RPKM.quantile, H3K27ac.RPKM.quantile, cellType, class, genicSymbol, name, activity_base)]
-} else if("ATAC.RPKM.quantile" %in% names(candidate_enhancers)) {
-  ce_test <- candidate_enhancers[, .(chr, start, end, ATAC.RPKM.quantile, H3K27ac.RPKM.quantile, cellType, class, genicSymbol, name, activity_base)]
-} else {
-  stop("Neither DHS.RPKM.quantile nor ATAC.RPKM.quantile found in candidate_enhancers")
-} 
-cg_test <- candidate_genes[,.(chr,start,end,name,score,strand,symbol,tss,Expression,is_ue,cellType,PromoterActivityQuantile)]
+#if("DHS.RPKM.quantile" %in% names(candidate_enhancers)) {
+#  ce_test <- candidate_enhancers[, .(chr, start, end, DHS.RPKM.quantile, H3K27ac.RPKM.quantile, cellType, class, genicSymbol, name, activity_base)]
+#} else if("ATAC.RPKM.quantile" %in% names(candidate_enhancers)) {
+#  ce_test <- candidate_enhancers[, .(chr, start, end, ATAC.RPKM.quantile, H3K27ac.RPKM.quantile, cellType, class, genicSymbol, name, activity_base)]
+#} else {
+#  stop("Neither DHS.RPKM.quantile nor ATAC.RPKM.quantile found in candidate_enhancers")
+#}
+
+ce_test <- candidate_enhancers[, .(chr, start, end, class, genicSymbol, name, activity_base)]
+
+#cg_test <- candidate_genes[,.(chr,start,end,name,score,strand,symbol,tss,Expression,is_ue,cellType,PromoterActivityQuantile)]
+
+cg_test <- candidate_genes[,.(chr,start,end,name,score,strand,symbol,tss,Expression,is_ue,PromoterActivityQuantile)]
+
 setkey(ce_test,chr)
 setkey(cg_test,chr)
 
@@ -210,7 +231,7 @@ gg0=ggplot(pchic_data_mut, aes(x = distSign_bin, y = asinh(N_imp.y), fill = grou
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg0, filename = paste0(directory_path, "/observed.only.distr_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg0, filename = paste0(plots_out_dir, "observed.only.distr_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
 
 
 # INCORPORATE INTO THE CODE ##
@@ -381,7 +402,7 @@ gg01=ggplot(imputed_data_mut, aes(x = distSign_bin, y = asinh(contact), fill = g
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg01, filename = paste0(directory_path, "/distr_imputed.data_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg01, filename = paste0(plots_out_dir, "/distr_imputed.data_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
 
 imputed_data_mut = imputed_data[abs(imputed_data$distSign) <25000]
 imputed_data_mut$distSign_bin <- cut(abs(imputed_data_mut$distSign), breaks = 10)
@@ -397,7 +418,7 @@ gg02=ggplot(imputed_data_mut, aes(x = distSign_bin, y = asinh(contact), fill = g
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg02, filename = paste0(directory_path, "/distr_imputed.data_v.close.range_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg02, filename = paste0(plots_out_dir, "/distr_imputed.data_v.close.range_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
 
 imputed_data_mut = imputed_data[abs(imputed_data$distSign) <5000]
 imputed_data_mut$distSign_bin <- cut(abs(imputed_data_mut$distSign), breaks = 11)
@@ -413,7 +434,7 @@ gg02=ggplot(imputed_data_mut, aes(x = distSign_bin, y = asinh(contact), fill = g
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg02, filename = paste0(directory_path, "/distr_imputed.data_v.v.close.range_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg02, filename = paste0(plots_out_dir, "/distr_imputed.data_v.v.close.range_N_v_Bmean_for_chr", i, ".pdf"), width = 16, height = 8)
 
 
 ##
@@ -483,13 +504,13 @@ gg6 <- ggplot(imputed_data_mut, aes(x = distSign_bin, y = asinh(contact), fill =
   theme_minimal()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 # Define the directory path
-directory_path <- input_cand_dir
+#directory_path <- input_cand_dir
 
 # Now save the plots to the created directory
-ggsave(gg3, filename = paste0(directory_path, "/distance_distr_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
-ggsave(gg4, filename = paste0(directory_path, "/count_distr_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
-ggsave(gg5, filename = paste0(directory_path, "/count_distr_close_range_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
-ggsave(gg6, filename = paste0(directory_path, "/count_distr_v_close_range_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg3, filename = paste0(plots_out_dir, "/distance_distr_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg4, filename = paste0(plots_out_dir, "/count_distr_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg5, filename = paste0(plots_out_dir, "/count_distr_close_range_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
+ggsave(gg6, filename = paste0(plots_out_dir, "/count_distr_v_close_range_imputed_contacts_for_chr", i, ".pdf"), width = 16, height = 8)
 
 print("Chromosome names of bait chr of exported data")
 print(unique(imputed_data[,baitChr]))
@@ -556,7 +577,7 @@ gg_genome <- ggplot(imputed_data_mut_genome, aes(x = distSign_bin, y = asinh(con
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Save the genome-wide plot
-ggsave(gg_genome, filename = paste0(input_cand_dir, "/genomewide_contact_distribution.pdf"), width = 16, height = 8)
+ggsave(gg_genome, filename = paste0(plots_out_dir, "/genomewide_contact_distribution.pdf"), width = 16, height = 8)
 print("Saved genome-wide contact distribution plot")
 
 # Additional Genome-wide Diagnostic Plots
@@ -575,7 +596,7 @@ gg_g100k <- ggplot(imputed_data_mut_genome_100k, aes(x = distSign_bin, y = asinh
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg_g100k, filename = paste0(input_cand_dir, "/genomewide_contact_distribution_100kb.pdf"), width = 16, height = 8)
+ggsave(gg_g100k, filename = paste0(plots_out_dir, "/genomewide_contact_distribution_100kb.pdf"), width = 16, height = 8)
 
 # <25kb
 imputed_data_mut_genome_25k <- imputed_data_genome[abs(distSign) < 25000]
@@ -589,7 +610,7 @@ gg_g25k <- ggplot(imputed_data_mut_genome_25k, aes(x = distSign_bin, y = asinh(c
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg_g25k, filename = paste0(input_cand_dir, "/genomewide_contact_distribution_25kb.pdf"), width = 16, height = 8)
+ggsave(gg_g25k, filename = paste0(plots_out_dir, "/genomewide_contact_distribution_25kb.pdf"), width = 16, height = 8)
 
 # <5kb
 imputed_data_mut_genome_5k <- imputed_data_genome[abs(distSign) < 5000]
@@ -603,7 +624,7 @@ gg_g5k <- ggplot(imputed_data_mut_genome_5k, aes(x = distSign_bin, y = asinh(con
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(gg_g5k, filename = paste0(input_cand_dir, "/genomewide_contact_distribution_5kb.pdf"), width = 16, height = 8)
+ggsave(gg_g5k, filename = paste0(plots_out_dir, "/genomewide_contact_distribution_5kb.pdf"), width = 16, height = 8)
 
 # ~~~ 2. HISTOGRAMS ~~~
 
@@ -622,7 +643,7 @@ gg_g_hist1 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
   theme_minimal() +
   theme(legend.title = element_blank())
 
-ggsave(gg_g_hist1, filename = paste0(input_cand_dir, "/genomewide_distance_histogram_count.pdf"), width = 16, height = 8)
+ggsave(gg_g_hist1, filename = paste0(plots_out_dir, "/genomewide_distance_histogram_count.pdf"), width = 16, height = 8)
 
 # Density
 gg_g_hist2 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
@@ -632,6 +653,6 @@ gg_g_hist2 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
   theme_minimal() +
   theme(legend.title = element_blank())
 
-ggsave(gg_g_hist2, filename = paste0(input_cand_dir, "/genomewide_distance_histogram_density.pdf"), width = 16, height = 8)
+ggsave(gg_g_hist2, filename = paste0(plots_out_dir, "/genomewide_distance_histogram_density.pdf"), width = 16, height = 8)
 
 

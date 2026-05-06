@@ -15,11 +15,6 @@ if (length(args)!=4) {
   
   print('Arguements supplied succesfully to pchic split script')}
 
-#pchic_rds= '~/../projects/lms-spivakov-analysis/live/artemov/ILC3/K562/K562_5kb_solbaits_merged_reweighted_Step2.Rds'
-#design= '~/../projects/lms-spivakov-analysis/live/Design/Human_hg38_bin5K_sol_baits/'
-#dist_out= '~/../projects/lms-spivakov-analysis/live/artemov/ILC3/K562/PCHIC_5kb/K562_dist_5kb.rds'
-#split_pchic='~/../projects/lms-spivakov-analysis/live/artemov/ILC3/K562/PCHIC_5kb/K562_5kb_'
-
 library(dplyr)
 library(stringr)
 library(data.table)
