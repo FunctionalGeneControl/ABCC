@@ -443,7 +443,7 @@ data_for_plot <- rbind(
              group = "Imputed using CHiCAGO Distance Function (not observed in PCHiC)")
 )
 ##
-gg1 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
+gg1 <- ggplot(data_for_plot, aes(x = abs_distSign, fill = group)) +
   geom_histogram(position = "identity", alpha = 0.25, bins = 30) +
   labs(title = paste("Distance distributions of imputed contacts",i),
        x = "abs(distance in bp)",
@@ -452,7 +452,7 @@ gg1 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
   scale_fill_manual(values = c("red", "blue","grey","green")) +
   theme(legend.title = element_blank())
 
-gg2 <- ggplot(data_for_plot, aes(x = distSign, fill = group)) +
+gg2 <- ggplot(data_for_plot, aes(x = abs_distSign, fill = group)) +
   geom_histogram(aes(y = after_stat(density)), position = "identity", alpha = 0.25, bins = 30) +
   labs(title = paste("Distance distributions of imputed contacts chr",i),
        x = "abs(distance in bp)",
