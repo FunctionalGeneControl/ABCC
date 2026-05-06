@@ -36,9 +36,9 @@ Activity (A) is defined as the geometric mean of the read counts of DNase-seq an
 ## Running the PCHiC-ABC Model
 Running the PCHiC-ABC model consists of the following steps:
 
- 1. Define candidate enhancer and gene regions [Same as the original ABC model]
- 2. Running PCHiC imputation [A new step for ABCC] 
- 3. Compute ABC Scores [the codebase is slightly modified here compared to the original]
+ 1. Define candidate enhancer and gene regions (the same step as in the original ABC model)
+ 2. Running PCHiC imputation (a new step for ABCC)
+ 3. Compute ABC Scores (using a predict.py script modified from the original ABC codebase)
 
 ### Step 1. Defining Candidate Enhancers and Genes.
 
