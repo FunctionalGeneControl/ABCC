@@ -105,7 +105,7 @@ Rscript enhancerliftoverwrapper.R EnhancerList.txt GeneList.txt
 * Please note the gene expression file should be tab separated with no column names.
 
 ## Contributors
-* ABCC development was led by Pavel Artemov supervised by Mikhail Spivakov, with valuable contributions by Joseph Wayman, Valeriya Malysheva and Helen Ray-Jones.
+* ABCC development was led by Pavel Artemov supervised by Mikhail Spivakov, with valuable contributions by Joseph Ellaway, Valeriya Malysheva and Helen Ray-Jones.
 
 ## Acknowledgements
 * We thank the Engreitz lab for developing the original ABC model and making the codebase accessible.
