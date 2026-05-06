@@ -19,11 +19,11 @@
 # args[4] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_"
 # args[5] = "~/analysis/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_dist.rds"
 # args[6] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/imputed_contact/"
-# args[7] = 1,2 – number of fragment steps to be used for imputation
+# REMOVED: args[7] = 1,2 – number of fragment steps to be used for imputation
 
 args = commandArgs(trailingOnly=TRUE)
 
-if (length(args)!=7) {
+if (length(args)!=6) {
   stop("imputation_script.R: Wrong number of arguments", call.=FALSE) 
 } else {
   print('Arguments supplied succesfully to imputation script')
