@@ -3,22 +3,22 @@
 # Date: 2024-10
 # Description: This script divides pchic rds into subfiles and also exports the distance file for imputation
 
-# Usage: Rscript imputation_script.R ${pchic.rds} ${design} ${enhancerdir/} ${split_pchic} ${distout.rds} ${imputed_pchic_prefix}
-# arg1 is pchic.rds, RDS file from step 2 of running 
-# arg2 is testDesignDir, needs to end in / 
-# arq3 is input_cand_dir, needs to end in /
-# arg4 is split_pchic, filename prefix only
-# arg5 is RDS file, distance parameters
-# arg6 is output directory, needs to end in /  
+message("\nUsage: Rscript imputation_script_whole_genome.r ${pchic.rds} ${design_dir/} ${enhancer_dir/} ${split_pchic} ${distout.rds} ${imputed_pchic_prefix/}\n
+# pchic.rds: an RDS file from step 2 of CHiCAGO
+# design_dir: the CHiCAGO design dir (needs to end with '/') 
+# enhancer_dir: the directory with enhancer features from the first steps of ABC (needs to end with '/') 
+# split_pchic: the full path + filename prefix for the split PCHiC files produced as an intermediate step
+# distout.rds: an RDS file with CHiCAGO distance function parameters
+# imputed_pchic_prefix: output directory, needs to end with '/' \n\n")  
 
 # Below are some examples of arguments for input 
 # args = vector("character")
-# args[1] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/Ery_Step2_Merged.rds"
-# args[2] = "/rds/general/project/lms-spivakov-analysis/live/Design/Human_hg19/"
-# args[3] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/"
-# args[4] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_"
-# args[5] = "~/analysis/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_dist.rds"
-# args[6] = "/rds/general/project/lms-spivakov-analysis/live/artemov/ABC_MASTER/ABC_data/input/K562_roadmap_Ery_MS/imputed_contact/"
+# args[1] = "K562_roadmap_Ery_MS/Ery_Step2_Merged.rds"
+# args[2] = "Design/Human_hg19/"
+# args[3] = "K562_roadmap_Ery_MS/"
+# args[4] = "K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_"
+# args[5] = "K562_roadmap_Ery_MS/K562_roadmap_Ery_MS_dist.rds"
+# args[6] = "K562_roadmap_Ery_MS/imputed_contact/"
 # REMOVED: args[7] = 1,2 – number of fragment steps to be used for imputation
 
 args = commandArgs(trailingOnly=TRUE)
@@ -47,18 +47,22 @@ split_pchic = args[4]
 distout.rds = args[5]
 pchic_out_prefix = file.path(args[6])
 
-##### Splitting Enhancer and Gene Lists by chromosome
-chr_split_command <- paste0("Rscript chr_split.r ",input_cand_dir)
-# Execute the command
-if(!system(chr_split_command)){
+##### Getting the path to the scripts' dir
+
+allArgs = commandArgs(trailingOnly = FALSE)
+script_path <- normalizePath(sub("--file=", "", allArgs[grep("--file=", allArgs)]))
+script_dir  <- dirname(script_path)
+message("The path to the scripts directory is:", script_dir)
+
+##### Splitting enhancer data by chromosome
+if(!system2("Rscript", args = c(file.path(script_dir, "chr_split.r"), input_cand_dir))){
   message("Successfully finished chromosome split")
 }else{
   message("Error in the chromosomes split")
 }
+
 ##### Splitting PCHiC by chromosome
-chic_split_command <- paste("Rscript chic_split.r",pchic.rds, testDesignDir, distout.rds, split_pchic)
-# Execute the command
-if(!system(chic_split_command)){
+if(!system2("Rscript", args = c(file.path(script_dir, "chic_split.r"), pchic.rds, testDesignDir, distout.rds, split_pchic)){
   message("Succesfully finished PCHiC split")
 }else{
   message("Error in the PCHiC split")
@@ -322,7 +326,7 @@ for (col in prefixes) {
   }
 }
 #print("Saving imputed data for tests")
-#fwrite(imputed_data,"/home/pa2915/analysis/artemov/ABC_MASTER/scripts/imputed_data_for_test.csv",sep='\t')
+#fwrite(imputed_data,"imputed_data_for_test.csv",sep='\t')
 ##### Some modifications for downstream export
 imputed_data[,tss1 := tss]
 imputed_data[,tss2 := tss]
