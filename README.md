@@ -1,6 +1,6 @@
 # Activity-By-Captured-Contact (ABCC)
 
-ABCC (also known is a CHiC-ABC) is a computational model for predicting the effects of enhancers on gene expression based on chromatin activity information and chromosomal contact data from high-resolution Promoter Capture Hi-C. It is an modification of the Activity-By-Contact (ABC) model developed by Jesse Engreitz's lab [1] [2] that uses Hi-C data as a source of chromosomal contact information.
+ABCC (also known as CHiC-ABC) is a computational model for predicting the effects of enhancers on gene expression based on chromatin activity information and chromosomal contact data from high-resolution Promoter Capture Hi-C (PCHi-C). It is an modification of the Activity-By-Contact (ABC) model developed by Jesse Engreitz's lab [1] [2] that uses Hi-C data as a source of chromosomal contact information.
 
 Promoter Capture Hi-C (PCHi-C) is a method of enriching Hi-C libraries for contacts involving (at least on one end) gene promoters using hybridisation probes. Please see Freire-Pritchett et al. [1] for information about PCHi-C and its analysis  tools.
 
@@ -23,7 +23,7 @@ In addition the following (non-cell-type specific) genome annotation files are r
  * bed file containing gene annotations (may change across cell types if using cell-type specific TSS's)
  * bed file containing chromosome annotations
 
-## Description of the ABC Model
+## The principle of the ABC(C) Model
 
 The Activity by Contact (ABC) model [1][2] is designed to represent a mechanistic model in which enhancers activate gene transcription upon enhancer-promoter contact. In a simple conception of such a model, the quantitative effect of an enhancer depends on the frequency with which it contacts a promoter multiplied by the strength of the enhancer (i.e., the ability of the enhancer to activate transcription upon contacting a promoter). Moreover, the contribution of a specific enhancer to a gene’s expression should depend on the surrounding context (ie, the strength and contact frequency of other enhancers for the gene). 
 
@@ -42,16 +42,12 @@ Running the PCHiC-ABC model consists of the following steps:
 
 ### Step 1. Defining Candidate Enhancers and Genes.
 
-Both the original ABC version used in this implementation and the newly developed ABC snakemake pipeline can be used for this purpose [https://github.com/broadinstitute/ABC-Enhancer-Gene-Prediction].
+Either the original ABC code used in this implementation or the newly developed ABC snakemake pipeline can be used for this purpose, as described in [https://abc-enhancer-gene-prediction.readthedocs.io/].
+
+* If running the origial ABC version for this step using ``makeCandidateRegions.py`` and ``run.neighborhoods.py``, you may find this notebook useful: [https://hoellin.github.io/eg/notes_ABC/generic_notebooks/turnkey_notebook_to_run_ABC_with_example_over_GM12878.html].
 
 #### Information on defining candidate elements from the original ABC method is copied below:
-'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In [1], we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). 
-
-Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant.
-
-We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘block-listed regions’). For convenience, we provide the list of block-listed regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>.
-
-We also force the candidate enhancer regions to include gene promoters, even if the promoter is not among the candidate elements with the strongest signals genome-wide in a cell type, by specifying `--region_includelist`. 
+'Candidate elements' are the set of putative enhancers; ABC scores will be computed for all 'Candidate elements' within 5Mb of each gene. In computing the ABC score, the product of DNase-seq (or ATAC-seq) and H3K27ac ChIP-seq reads will be counted in each candidate element. Thus the candidate elements should be regions of open (nucleasome depleted) chromatin of sufficient length to capture H3K27ac marks on flanking nucleosomes. In [1], we defined candidate regions to be 500bp (150bp of the DHS peak extended 175bp in each direction). Given that the ABC score uses absolute counts of Dnase-seq reads in each region, ```makeCandidateRegions.py ``` selects the strongest peaks as measured by absolute read counts (not by pvalue). In order to do this, we first call peaks using a lenient significance threshold (.1 in the above example) and then consider the peaks with the most read counts. This procedure implicitly assumes that the active karyotype of the cell type is constant. We recommend removing elements overlapping regions of the genome that have been observed to accumulate anomalous number of reads in epigenetic sequencing experiments (‘block-listed regions’). For convenience, we provide the list of block-listed regions available from <https://sites.google.com/site/anshulkundaje/projects/blacklists>. We also force the candidate enhancer regions to include gene promoters, even if the promoter is not among the candidate elements with the strongest signals genome-wide in a cell type, by specifying `--region_includelist`. 
 
 ### Step 2. Running PCHiC imputation
 
