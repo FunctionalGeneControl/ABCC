@@ -268,7 +268,7 @@ imputed_data[, contact:=pmax(N_imp.x, N_imp.y.x,N_imp.y.y, na.rm = T)]
 imputed_data_collapsed = imputed_data[, {sel = which(contact==max(contact))[1]; 
 .(baitID=baitID[sel], baitChr.x=baitChr.x[sel], baitChr.y=baitChr.y[sel],
   otherEndID=otherEndID[sel], otherEndChr.x=otherEndChr.x[sel],otherEndChr.y=otherEndChr.y[sel], otherEnd_name=otherEnd_name[sel],
-  V2.x.y=V2.x.y[sel], V3.x.y=V3.y.y[sel],V2.x.x=V2.x.x[sel], V3.x.x=V3.x.x[sel],
+  V2.x.y=V2.x.y[sel], V3.x.y=V3.x.y[sel],V2.x.x=V2.x.x[sel], V3.x.x=V3.x.x[sel],
   V2.y.y=V2.y.y[sel], V3.y.y=V3.y.y[sel],V2.y.x=V2.y.x[sel], V3.y.x=V3.y.x[sel],
   s_j.x=s_j.x[sel], s_j.y=s_j.y[sel], 
   start.y=start.y[sel], end.y=end.y[sel], group.x=group.x[sel],group.y=group.y[sel],score.x=score.x[sel], score.y=score.y[sel],distbin.x=distbin.x[sel], distSign.x=distSign.x[sel],
@@ -437,9 +437,9 @@ ggsave(gg02, filename = paste0(plots_out_dir, "/distr_imputed.data_v.v.close.ran
 
 ##
 data_for_plot <- rbind(
-  data.frame(abs_distSign = abs(imputed_data[!is.na(imputed_data$s_j), "distSign"]),
+  data.frame(abs_distSign = unlist(abs(imputed_data[!is.na(imputed_data$s_j), "distSign"])),
              group = "Contact inferred from observed contact frequencies (total)"),
-  data.frame(abs_distSign = abs(imputed_data[is.na(imputed_data$s_j), "distSign"]),
+  data.frame(abs_distSign = unlist(abs(imputed_data[is.na(imputed_data$s_j), "distSign"])),
              group = "Imputed using CHiCAGO Distance Function (not observed in PCHiC)")
 )
 ##
