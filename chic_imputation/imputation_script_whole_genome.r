@@ -361,7 +361,7 @@ imputed_data[,end.y:=floor(enh_midpoint)+1]
 rmap=list.files(path = testDesignDir, pattern = "\\.rmap$")[1]
 rmap <- fread(paste0(testDesignDir,rmap),sep ='\t',header=FALSE)
 rmap=rmap[V1==imputed_data$baitChr[1]]
-nuber_of_steps = as.numeric(args[7])
+#nuber_of_steps = as.numeric(args[7])
 rmap[,V2:=as.numeric(V2)]
 rmap[,V3:=as.numeric(V3)]
 imputed_data[,tss:=as.numeric(tss)]
