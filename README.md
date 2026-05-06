@@ -106,7 +106,7 @@ Rscript enhancerliftoverwrapper.R EnhancerList.txt GeneList.txt
 * The Expression column is not used by the algorithm itself, and is only helpful for post-hoc analyses. The latest version of the ABC algorithm provides accessibility-based estimates of expression in this column.
 
 ## Contributors
-* ABCC development was led by Pavel Artemov supervised by Mikhail Spivakov, with valuable contributions by Joseph Wayman, Valeriya Malysheva and Helen Ray-Jones.
+* ABCC development was led by Pavel Artemov supervised by Mikhail Spivakov, with valuable contributions by Joseph Ellaway, Valeriya Malysheva and Helen Ray-Jones.
 
 ## Acknowledgements
 * We thank the Engreitz lab for developing the original ABC model and making the codebase accessible.
