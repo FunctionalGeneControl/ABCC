@@ -58,7 +58,7 @@ if (dir.exists(pchic_out_prefix)) {
 plots_out_dir = file.path(pchic_out_prefix, "plots")
 
 if(!dir.create(plots_out_dir)){
-	stop("Couldn't create a plots subdirectory %s.", plots_out_dir)
+	stop(sprintf("Couldn't create a plots subdirectory %s.", plots_out_dir))
 }
 
 
@@ -73,22 +73,22 @@ message("The path to the scripts directory is:", script_dir)
 if(!system2("Rscript", args = c(file.path(script_dir, "chr_split.r"), input_cand_dir))){
   message("Successfully finished chromosome split")
 }else{
-  message("Error in the chromosomes split")
+  stop("Error in the chromosomes split")
 }
 
 ##### Splitting PCHiC by chromosome
 if(!system2("Rscript", args = c(file.path(script_dir, "chic_split.r"), pchic.rds, testDesignDir, distout.rds, split_pchic))){
   message("Succesfully finished PCHiC split")
 }else{
-  message("Error in the PCHiC split")
+  stop("Error in the PCHiC split")
 }
 
-enhancers=fread(paste0(input_cand_dir,'/EnhancerList.txt'))
-enhancers=enhancers[,chr:=str_split(chr,'chr', simplify = TRUE)[,2]]
-chromosomes=unique(enhancers[,chr])
-print("Using chromosomes in enhancers:")
-print(chromosomes)
-rm(enhancers)
+#enhancers=fread(paste0(input_cand_dir,'/EnhancerList.txt'))
+#enhancers=enhancers[,chr:=str_split(chr,'chr', simplify = TRUE)[,2]]
+#chromosomes=unique(enhancers[,chr])
+#print("Using chromosomes in enhancers:")
+#print(chromosomes)
+#rm(enhancers)
 genes=fread(paste0(input_cand_dir,'/GeneList.txt'))
 genes=genes[,chr:=str_split(chr,'chr', simplify = TRUE)[,2]]
 chromosomes=unique(genes[,chr])
@@ -98,8 +98,7 @@ rm(genes)
 chromosomes=chromosomes[chromosomes!='Y']
 #reading in the distance parameters
 print("Reading distance file")
-print(args[5])
-distout.rds = readRDS(args[5])
+distfun.par = readRDS(distout.rds)
 # preparing folders for the input
 #chromosomes=1
 imputed_data_all <- list()
@@ -238,7 +237,7 @@ ggsave(gg0, filename = paste0(plots_out_dir, "observed.only.distr_N_v_Bmean_for_
 message("Percent contacts imputed from Bmean: ", round(nrow(pchic_data[N_imp.y==Bmean/(s_i*s_j)])/nrow(pchic_data)*100,2))
 
 print('No N_imp error')
-cand_pairs_chr[,N_imp.x := Chicago:::.distFun(abs(distSign),distout.rds)]
+cand_pairs_chr[,N_imp.x := Chicago:::.distFun(abs(distSign),distfun.par)]
 print('No Chicago error')
 cand_pairs_chr <- cand_pairs_chr[abs(distSign) > 0,]
 print('No other imp error')
@@ -247,7 +246,7 @@ setkey(pchic_data,baitID,otherEndID)
 setkey(cand_pairs_chr,baitID, otherEndID)
 print('Imputing')
 imputed_data1 <- merge(cand_pairs_chr, pchic_data, by = c('otherEndID','baitID'), all.x = TRUE,allow.cartesian = TRUE)
-imputed_data1[!is.na(N_imp.y)]
+#imputed_data1[!is.na(N_imp.y)]
 ##swap pchic name and then do again 
 setnames(pchic_data, old = c("otherEndID", "V2.y", "V3.y"),
          new = c("temp_baitID", "temp_V2.x", "temp_V3.x"))
@@ -257,13 +256,13 @@ setnames(pchic_data, old = c("temp_baitID", "temp_V2.x", "temp_V3.x"),
          new = c("baitID", "V2.x", "V3.x"))
 ## pchic data at this point has flipped IDs of bait and other end so it needs to be flipped back if you decide to use it downstream
 imputed_data <- merge(imputed_data1, pchic_data, by = c('otherEndID','baitID'), all.x = TRUE,allow.cartesian = TRUE)
-imputed_data[!is.na(N_imp.y.y)]
+#imputed_data[!is.na(N_imp.y.y)]
 
 imputed_data[is.na(N_imp.x),N_imp.x:=0]
 imputed_data[is.na(N_imp.y.x),N_imp.y.x:=0]
 imputed_data[is.na(N_imp.y.y),N_imp.y.y:=0]
 imputed_data[, contact:=pmax(N_imp.x, N_imp.y.x,N_imp.y.y, na.rm = T)]
-imputed_data
+#imputed_data
 # Changing the algorithm! Not using the midpoint for mapping to the restriction fragment but the fragment with the highest contact.
 # super important pay attention here 
 imputed_data_collapsed = imputed_data[, {sel = which(contact==max(contact))[1]; 
@@ -368,22 +367,21 @@ imputed_data[,tss:=as.numeric(tss)]
 imputed_data[,distSign:=as.numeric(distSign)]
 setnames(rmap,c("baitChr","next_frag_boundary","next_frag_outer_boundary","enh_ID_plus"))
 rmap[,frag_length:=abs(next_frag_outer_boundary-next_frag_boundary)]
-if(median(rmap[,frag_length])>1500){
+#if(median(rmap[,frag_length])>1500){
 #median_frag_length=5210
+#	median_frag_length=1500
+#}else{
+#	median_frag_length=1500
+#}
 median_frag_length=1500
-
-}else{
-median_frag_length=1500
-}
-
 
 ## Potentially change one selection just to be based on one of the boundaries 
 message(paste0("Number of contacts, N capped because distance of enhancer is closer than next and prev fragment from TSS: ",
        nrow(imputed_data[abs(distSign) <= median_frag_length,])))
 imputed_data[!is.na(group), group := "Contact frequency observed"]
 imputed_data[is.na(group), group := "Imputed (using CHiCAGO distance function)"]
-imputed_data[abs(distSign) <= median_frag_length & contact>Chicago:::.distFun(median_frag_length,distout.rds), group:='Capped']
-imputed_data[abs(distSign) <= median_frag_length & contact>Chicago:::.distFun(median_frag_length,distout.rds), contact:=Chicago:::.distFun(median_frag_length,distout.rds)]
+imputed_data[abs(distSign) <= median_frag_length & contact>Chicago:::.distFun(median_frag_length,distfun.par), group:='Capped']
+imputed_data[abs(distSign) <= median_frag_length & contact>Chicago:::.distFun(median_frag_length,distfun.par), contact:=Chicago:::.distFun(median_frag_length,distfun.par)]
 
 
 ##### Plots for diagnostics
