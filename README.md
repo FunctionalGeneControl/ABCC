@@ -70,7 +70,7 @@ mkdir $imputed_pchic_prefix
 Rscript imputation_script_whole_genome.r ${pchic_rds} ${design} ${enhancerdir} ${split_pchic} ${distout_rds} ${imputed_pchic_prefix}
 
 ```
-The main output from this will be a directory, with folder for each chromosome, where each folder will contain imputed (eg. chr1.bedpe.gz) PCHiC contact frequency file in bedpe format as well as a separate file with CHiCAGO Score for contact interactions that have them. This directory structure can be used down the pipeline in the next step.
+The main output from this will be a directory, with a subfolder for each chromosome, where will contain imputed PCHiC contact frequency file in bedpe format (eg. chr1.bedpe.gz), as well as a separate file with CHiCAGO scores for contacts. This directory structure can be used down the pipeline in the next step.
 
 Imputation is a computationally heavy script, for speed we devised such that it is done by chromosome, so each candidate lists need to be split into individual chromosomes. We attach the script to separate the files chromosome by chromosome. Chromosome splitting and saving distance parameters are also needed to be performed before running the imputations. The following command using our scripts will separate the files into individual CHiCAGO object chromosome files as well as will save a distance parameters file. These steps are run in the background, the supporting files are present in the src folder. 
 
